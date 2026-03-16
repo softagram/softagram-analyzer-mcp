@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "softagram": {
+      "type": "streamable-http",
+      "url": "http://localhost:8008/mcp"
+    }
+  }
+}
