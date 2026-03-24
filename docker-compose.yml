@@ -1,6 +1,6 @@
 services:
   analyzer:
-    image: softagram/analyzer-mcp:latest
+    image: registry.softagram.com/analyzer-mcp:latest
     container_name: softagram-analyzer
     ports:
       - "8008:8008"

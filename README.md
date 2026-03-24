@@ -9,6 +9,17 @@ Claude (or any MCP-compatible AI assistant) can analyze your repositories and an
 
 ## Quick Start
 
+### 0. Log in to the Softagram registry
+
+You need credentials provided by Softagram. Contact [support@softagram.com](mailto:support@softagram.com)
+if you don't have them.
+
+```bash
+docker login registry.softagram.com
+# Username: <your-username>
+# Password: <your-token>
+```
+
 ### 1. Start the analyzer
 
 ```bash
@@ -22,7 +33,7 @@ docker run -d --name softagram-analyzer \
   --tmpfs /tmp:size=2G \
   -v ~/code/my-project:/input/my-project:ro \
   -p 8008:8008 \
-  softagram/analyzer-mcp:latest
+  registry.softagram.com/analyzer-mcp:latest
 ```
 
 ### 2. Configure Claude Code
@@ -67,7 +78,7 @@ docker run -d --name softagram-analyzer \
   -v ~/code/my-frontend:/input/my-frontend:ro \
   -v ~/code/my-backend:/input/my-backend:ro \
   -p 8008:8008 \
-  softagram/analyzer-mcp:latest
+  registry.softagram.com/analyzer-mcp:latest
 ```
 
 Repositories are mounted read-only (`:ro`) — the analyzer never modifies your code.
@@ -205,7 +216,7 @@ analyses are faster due to caching.
 
 **Image not found:**
 ```bash
-docker pull softagram/analyzer-mcp:latest
+docker pull registry.softagram.com/analyzer-mcp:latest
 ```
 
 ## License
