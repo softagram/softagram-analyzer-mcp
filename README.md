@@ -9,18 +9,31 @@ Claude (or any MCP-compatible AI assistant) can analyze your repositories and an
 
 ## Quick Start
 
-### 0. Log in to the Softagram registry
+### Automated setup (recommended)
+
+The setup script walks you through login, repository selection, MCP configuration, and verification — all in one command:
+
+```bash
+./setup.sh
+```
+
+### Manual setup
+
+<details>
+<summary>Click to expand manual steps</summary>
+
+#### 0. Log in to the Softagram registry
 
 You need credentials provided by Softagram. Contact [support@softagram.com](mailto:support@softagram.com)
 if you don't have them.
 
 ```bash
 docker login registry.softagram.com
-# Username: <your-username>
-# Password: <your-token>
 ```
 
-### 1. Start the analyzer
+#### 1. Start the analyzer
+
+Edit `docker-compose.yml` to mount your repositories (see [Mounting Your Code](#mounting-your-code)), then:
 
 ```bash
 docker compose up -d
@@ -33,22 +46,36 @@ docker run -d --name softagram-analyzer \
   --tmpfs /tmp:size=2G \
   -v ~/code/my-project:/input/my-project:ro \
   -p 8008:8008 \
-  registry.softagram.com/analyzer-mcp:latest
+  registry.softagram.com/softagram-analyzer-mcp:latest
 ```
 
-### 2. Configure Claude Code
+#### 2. Configure Claude Code
 
-Copy the example configuration:
+Add Softagram to your MCP configuration. If you **don't** have `~/.claude/mcp.json` yet:
 
 ```bash
-# Global (all projects)
 cp mcp.json.example ~/.claude/mcp.json
-
-# Or project-specific
-cp mcp.json.example /path/to/your/project/.mcp.json
 ```
 
-### 3. Use with Claude
+If you **already have** `~/.claude/mcp.json` with other servers, merge the `"softagram"` entry into your existing `mcpServers` object — don't overwrite the file.
+
+For project-specific configuration, copy to `.mcp.json` in the project root instead.
+
+#### 3. Verify it works
+
+```bash
+# Check the container is running
+docker ps | grep softagram-analyzer
+
+# Check the MCP server responds
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8008/mcp
+# Any response (200, 405, etc.) means the server is up.
+# "000" or connection refused means it's still starting — wait a few seconds.
+```
+
+#### 4. Use with Claude
+
+Start a **new** Claude Code session (needed to pick up MCP config), then:
 
 ```
 You: "Analyze my project at /input/my-project"
@@ -56,6 +83,8 @@ You: "What depends on the UserService class?"
 You: "What would break if I change the validate function?"
 You: "Show me the architecture of the auth module"
 ```
+
+</details>
 
 ## Mounting Your Code
 
@@ -78,7 +107,7 @@ docker run -d --name softagram-analyzer \
   -v ~/code/my-frontend:/input/my-frontend:ro \
   -v ~/code/my-backend:/input/my-backend:ro \
   -p 8008:8008 \
-  registry.softagram.com/analyzer-mcp:latest
+  registry.softagram.com/softagram-analyzer-mcp:latest
 ```
 
 Repositories are mounted read-only (`:ro`) — the analyzer never modifies your code.
@@ -200,6 +229,20 @@ Python, Java, Kotlin, JavaScript, TypeScript, C#, F#, C/C++, Go, Dart, Ruby,
 PHP, Scala, Groovy, Swift, Objective-C, Haskell, Clojure, COBOL, MATLAB,
 and more.
 
+## Verify It Works
+
+After starting the container, check that the MCP server is responding:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8008/mcp
+```
+
+- **Any HTTP status** (200, 405, etc.) — server is running
+- **000 / connection refused** — server is still starting, wait a few seconds and retry
+- **No response after 60 seconds** — check `docker logs softagram-analyzer`
+
+Then start a **new** Claude Code session and ask Claude to list available tools — you should see the Softagram tools (analyze_repo, get_dependencies, etc.).
+
 ## Troubleshooting
 
 **Container won't start:**
@@ -209,6 +252,7 @@ docker logs softagram-analyzer
 
 **"Connection refused" on port 8008:**
 Wait a few seconds after starting — the server needs time to initialize.
+Verify with: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8008/mcp`
 
 **Analysis takes a long time:**
 First analysis of a large codebase can take several minutes. Subsequent
@@ -216,8 +260,11 @@ analyses are faster due to caching.
 
 **Image not found:**
 ```bash
-docker pull registry.softagram.com/analyzer-mcp:latest
+docker pull registry.softagram.com/softagram-analyzer-mcp:latest
 ```
+
+**MCP tools not visible in Claude Code:**
+Make sure `~/.claude/mcp.json` (or `.mcp.json`) contains the `"softagram"` server entry, and that you started a **new** session after adding it.
 
 ## License
 

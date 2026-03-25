@@ -1,6 +1,6 @@
 services:
   analyzer:
-    image: registry.softagram.com/analyzer-mcp:latest
+    image: registry.softagram.com/softagram-analyzer-mcp:latest
     container_name: softagram-analyzer
     ports:
       - "8008:8008"
@@ -8,12 +8,11 @@ services:
       - /tmp:size=2G
     volumes:
       # Mount your repositories here (read-only).
-      # Add one line per repository you want to analyze.
-      # Example:
-      #   - ~/code/my-project:/input/my-project:ro
-      #   - ~/code/another-repo:/input/another-repo:ro
+      # Uncomment and adjust the paths below:
+      - ~/code:/input/code:ro                       # all repos under ~/code
+      # - ~/code/my-project:/input/my-project:ro    # or mount individually
+      # - ~/code/backend:/input/backend:ro
 
       # Persist analysis results across container restarts (optional):
       # - ./analysis-outputs:/tmp/analysis-outputs
-      []
     restart: unless-stopped
